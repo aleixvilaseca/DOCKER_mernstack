@@ -1,0 +1,58 @@
+version: "3"  
+
+services:
+  db:
+    image: docker.io/bitnami/mongodb:5.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - 'mongodb_data:/bitnami/mongodb'
+    restart: always
+    networks:
+      - mernStack
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.devClient
+    ports:
+    -  3000:3000
+    container_name: mern-ui
+    networks:
+    -  mernstack
+    volumes:
+    -  ./ui/src:/usr/app/src
+    -  ./ui/public:/usr/app/public
+    depends_on:
+    - api
+    stdin_open: true
+    tty: true
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.devServer
+    ports:
+     - 3080:3080
+    container_name: mern-api
+    networks:
+     - mernStack
+    volumes:
+    - ./api/src:/usr/app/src
+    depends_on:
+    - db
+
+  memcached2:
+    image: memcached
+    container_name: memcached2
+    hostname: memcached2
+    expose:
+      - 11122
+
+networks:
+  mernStack:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
